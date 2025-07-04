@@ -1,0 +1,127 @@
+.steps {
+  padding: 3rem 0;
+  background-color: #f8f9fa;
+}
+
+.dark-mode .steps {
+  background-color: #1a1a2e;
+}
+
+.steps h2 {
+  text-align: center;
+  margin-bottom: 3rem;
+  font-size: 2rem;
+  color: var(--primary);
+}
+
+.steps-container {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  gap: 30px;
+}
+
+.step {
+  position: relative;
+  z-index: 1;
+  background: white;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  width: 30%;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.dark-mode .step {
+  background: #16213e;
+  color: white;
+}
+
+.step:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.step-number {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.step-icon-container {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  border-radius: 50%;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.step h3 {
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.dark-mode .step h3 {
+  color: var(--success);
+}
+
+.step p {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.dark-mode .step p {
+  color: #ccc;
+}
+
+.step-connector {
+  position: absolute;
+  top: 30%;
+  left: 15%;
+  right: 15%;
+  height: 3px;
+  background: var(--primary-light);
+  z-index: 0;
+  opacity: 0.3;
+}
+
+@media (max-width: 768px) {
+  .steps-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 3rem;
+  }
+  
+  .step {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .step-connector {
+    display: none;
+  }
+  
+  .steps {
+    padding: 3rem 0;
+  }
+}
