@@ -52,7 +52,7 @@ app.post('/download', async (req, res) => {
       fs.mkdirSync(outputDir);
     }
 
-    const ytDlpPath = path.join(__dirname, 'yt-dlp.exe');
+    const ytDlpPath = path.join(__dirname, 'yt-dlp');
     let formatCode = 'best';
 
     if (quality === '1080') formatCode = 'bestvideo[height<=1080]+bestaudio/best';
