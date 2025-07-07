@@ -313,3 +313,36 @@
     padding: 0.8rem 1rem;
   }
 }
+
+.progress-container {
+  margin-top: 15px;
+  text-align: center;
+
+}
+
+.progress-track {
+  position: relative;
+  display: inline-block;
+  width: 50%;
+  height: 10px;
+  background-color: #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease;
+}
+
+.progress-number {
+  font-weight: bold;
+  color: #333;
+}
+
+.processing-text {
+  color: #666;
+  font-size: 0.9rem;
+}
