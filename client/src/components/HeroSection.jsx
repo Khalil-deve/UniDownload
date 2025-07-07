@@ -11,7 +11,7 @@ export default function HeroSection() {
     const [quality, setQuality] = useState('best');
 
     useEffect(() => {
-        const ws = new WebSocket('https://uni-download.vercel.app');
+        const ws = new WebSocket('https://unidownload-production.up.railway.app');
 
         ws.onmessage = (event) => {
             const { progress } = JSON.parse(event.data);
@@ -36,7 +36,7 @@ export default function HeroSection() {
         setDownloadProgress(0);
 
         try {
-            const res = await fetch('https://uni-download.vercel.app/download', {
+            const res = await fetch('https://unidownload-production.up.railway.app/download', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
