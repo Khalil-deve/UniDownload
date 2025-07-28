@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { spawn } = require("child_process");
+const ytdlp = require("yt-dlp-exec");
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
@@ -72,9 +73,7 @@ app.post("/download", async (req, res) => {
       fs.mkdirSync(outputDir);
     }
 
-    const ytDlpPath = path.join(__dirname, "yt-dlp");
     let formatCode = "best";
-
     if (quality === "1080")
       formatCode = "bestvideo[height<=1080]+bestaudio/best";
     else if (quality === "720")
@@ -83,34 +82,21 @@ app.post("/download", async (req, res) => {
       formatCode = "bestvideo[height<=480]+bestaudio/best";
     else if (quality === "audio") formatCode = "bestaudio";
 
-    const downloader = spawn("python", [
-      ytDlpPath,
-      "-f",
-      formatCode,
-      "-o",
-      outputPath,
-      url,
-    ]);
-
-    downloader.on("error", (err) => {
-      console.error("Failed to start yt-dlp process:", err);
-      return res.status(500).json({ error: "yt-dlp process failed to start" });
+    // Start yt-dlp process
+    const subprocess = ytdlp.raw(url, {
+      format: formatCode,
+      output: outputPath,
     });
 
-    downloader.stderr.on("data", (data) => {
-      console.log(`[yt-dlp stdout]: ${data}`);
-    });
-
-    // Progress reporting
-    downloader.stdout.on("data", (data) => {
-      const output = data.toString();
-      const match = output.match(/\[download\]\s+(\d{1,3}\.\d+)%/);
+    // Listen for progress from stdout
+    subprocess.stdout.on("data", (data) => {
+      const line = data.toString();
+      const match = line.match(/\[download\]\s+(\d{1,3}\.\d+)%/);
 
       if (match) {
         const progress = parseFloat(match[1]);
-        console.log(`Progress: ${progress}%`);
 
-        // Send to all clients
+        // Broadcast to all connected clients
         wss.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify({ progress }));
@@ -119,22 +105,25 @@ app.post("/download", async (req, res) => {
       }
     });
 
-    downloader.on("close", (code) => {
+    subprocess.stderr.on("data", (data) => {
+      console.error(`yt-dlp stderr: ${data}`);
+    });
+
+    subprocess.on("error", (err) => {
+      console.error("Failed to start yt-dlp:", err);
+      return res.status(500).json({ error: "yt-dlp failed to start" });
+    });
+
+    subprocess.on("close", (code) => {
       if (code !== 0) {
-        console.error(`yt-dlp exited with code ${code}`);
-        return res.status(500).json({ error: "Download failed" });
+        return res.status(500).json({ error: "yt-dlp exited with error" });
       }
 
-      res.on("close", () => {
-        if (!res.writableEnded) {
-          console.warn("Client disconnected before file was sent.");
-        }
-      });
-
+      // Download completed — send file to frontend
       res.download(outputPath, fileName, (err) => {
         if (err) {
+          console.error("Send error:", err);
           if (!res.headersSent) {
-            console.error("Send error:", err);
             return res.status(500).send("Could not send file");
           }
         }
@@ -142,8 +131,8 @@ app.post("/download", async (req, res) => {
       });
     });
   } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Something went wrong" });
+    console.error("yt-dlp failed:", err);
+    res.status(500).json({ error: "yt-dlp failed to download video" });
   }
 });
 
