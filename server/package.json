@@ -5,8 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "postinstall": "npx yt-dlp-exec --help || true"
+    "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "Muhammad Khalil",
@@ -15,7 +14,6 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "ws": "^8.18.3",
-    "yt-dlp-exec": "^1.0.2"
+    "ws": "^8.18.3"
   }
 }

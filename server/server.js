@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const { spawn } = require("child_process");
-const ytdlp = require("yt-dlp-exec");
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
@@ -16,34 +15,24 @@ const wss = new WebSocket.Server({ server });
 
 let socketClients = [];
 
-// WebSocket connection
 wss.on("connection", (ws) => {
   console.log("WebSocket client connected");
   socketClients.push(ws);
 
-  // Heartbeat
-  const heartbeatInterval = setInterval(() => {
+  const heartbeat = setInterval(() => {
     if (ws.readyState === WebSocket.OPEN) {
       ws.ping();
     }
   }, 30000);
 
-  ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
-  });
-
   ws.on("close", () => {
-    console.log("WebSocket client disconnected");
-    clearInterval(heartbeatInterval);
+    console.log("WebSocket disconnected");
+    clearInterval(heartbeat);
     socketClients = socketClients.filter((client) => client !== ws);
   });
-});
 
-// Health check endpoint
-app.get("/ws-health", (req, res) => {
-  res.json({
-    wsActive: true,
-    clients: socketClients.length,
+  ws.on("error", (err) => {
+    console.error("WebSocket error:", err);
   });
 });
 
@@ -53,7 +42,7 @@ const cleanUp = (filePath) => {
   setTimeout(() => {
     if (fs.existsSync(filePath)) {
       fs.unlink(filePath, (err) => {
-        if (err) console.error("Error deleting file:", err);
+        if (err) console.error("File deletion error:", err);
       });
     }
   }, 10000);
@@ -82,21 +71,22 @@ app.post("/download", async (req, res) => {
       formatCode = "bestvideo[height<=480]+bestaudio/best";
     else if (quality === "audio") formatCode = "bestaudio";
 
-    // Start yt-dlp process
-    const subprocess = ytdlp.raw(url, {
-      format: formatCode,
-      output: outputPath,
-    });
+    const ytDlpPath = path.join(__dirname, "yt-dlp.py");
 
-    // Listen for progress from stdout
-    subprocess.stdout.on("data", (data) => {
-      const line = data.toString();
-      const match = line.match(/\[download\]\s+(\d{1,3}\.\d+)%/);
+    const downloader = spawn("python3", [
+      ytDlpPath,
+      "-f",
+      formatCode,
+      "-o",
+      outputPath,
+      url,
+    ]);
 
+    downloader.stdout.on("data", (data) => {
+      const output = data.toString();
+      const match = output.match(/\[download\]\s+(\d{1,3}\.\d+)%/);
       if (match) {
         const progress = parseFloat(match[1]);
-
-        // Broadcast to all connected clients
         wss.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify({ progress }));
@@ -105,21 +95,20 @@ app.post("/download", async (req, res) => {
       }
     });
 
-    subprocess.stderr.on("data", (data) => {
+    downloader.stderr.on("data", (data) => {
       console.error(`yt-dlp stderr: ${data}`);
     });
 
-    subprocess.on("error", (err) => {
+    downloader.on("error", (err) => {
       console.error("Failed to start yt-dlp:", err);
       return res.status(500).json({ error: "yt-dlp failed to start" });
     });
 
-    subprocess.on("close", (code) => {
+    downloader.on("close", (code) => {
       if (code !== 0) {
         return res.status(500).json({ error: "yt-dlp exited with error" });
       }
 
-      // Download completed — send file to frontend
       res.download(outputPath, fileName, (err) => {
         if (err) {
           console.error("Send error:", err);
