@@ -76,7 +76,6 @@ app.post("/download", async (req, res) => {
     const downloader = spawn("python3", [
       ytDlpPath,
       ...formatArgs,,
-      formatCode,
       "-o",
       outputPath,
       url,
