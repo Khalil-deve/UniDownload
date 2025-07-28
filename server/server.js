@@ -62,20 +62,20 @@ app.post("/download", async (req, res) => {
       fs.mkdirSync(outputDir);
     }
 
-    let formatCode = "best";
+    let formatArgs = [];
     if (quality === "1080")
-      formatCode = "bestvideo[height<=1080]+bestaudio/best";
+      formatArgs = ["-f", "bestvideo[height<=1080]+bestaudio/best"];
     else if (quality === "720")
-      formatCode = "bestvideo[height<=720]+bestaudio/best";
+      formatArgs = ["-f", "bestvideo[height<=720]+bestaudio/best"];
     else if (quality === "480")
-      formatCode = "bestvideo[height<=480]+bestaudio/best";
-    else if (quality === "audio") formatCode = "bestaudio";
+      formatArgs = ["-f", "bestvideo[height<=480]+bestaudio/best"];
+    else if (quality === "audio") formatArgs = ["-f", "bestaudio"];
 
     const ytDlpPath = path.join(__dirname, "yt-dlp.py");
 
     const downloader = spawn("python3", [
       ytDlpPath,
-      "-f",
+      ...formatArgs,,
       formatCode,
       "-o",
       outputPath,
