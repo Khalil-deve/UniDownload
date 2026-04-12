@@ -15,6 +15,11 @@ pids
 
 # Dependency directories
 node_modules/
+        
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # Build outputs
 dist/
