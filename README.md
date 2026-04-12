@@ -1,79 +1,108 @@
-#  UniDownload – Video Downloader
+# 🚀 UniDownload - Premium Video Downloader
 
-UniDownload is a simple and powerful video downloader built with modern web technologies. It allows users to download videos from various platforms like YouTube, Facebook, TikTok, and more. The interface is clean, responsive, and user-friendly — just paste the link, choose your format, and download with ease!
+UniDownload is a powerful, professional, and high-speed video downloader built with **React**, **Node.js**, and **yt-dlp**. It allows users to save videos from YouTube, Instagram, Facebook, TikTok, and more—all in HD quality and without watermarks.
 
-## 🚀 Features
+![UniDownload Hero](client/public/Home-page.png)
 
-*  Download videos from multiple platforms (YouTube, Facebook, etc.)
-*  Auto-detect platform from URL
-*  Choose format/quality before downloading
-*  Real-time download progress feedback
-*  Fully responsive UI
-*  Built with `yt-dlp` and Node.js for backend processing
+## ✨ Features
 
-## 🛠️ Tech Stack
+- **Multi-Platform Support**: YouTube, Instagram, Facebook, TikTok, Twitter (X), and more.
+- **Multiple Quality Options**: Choose between 4K, 1080p, 720p, 480p, or Audio-only (MP3).
+- **Real-time Progress**: Live WebSocket-based progress bar for every download.
+- **Privacy First**: No login required. Files are deleted from the server immediately after download.
+- **Production Ready**: Full Docker & Nginx configuration included for easy deployment.
+- **Responsive Design**: Modern, glassmorphism UI that looks great on mobile and desktop.
 
-**Frontend:**
+---
 
-* React.js
-* CSS (custom + responsive styling)
-* React Icons
-* Toast Notifications (`react-toastify`)
+## 🛠️ Technology Stack
 
-**Backend:**
+- **Frontend**: React 19, Vite, Tailwind CSS 4, React Router 7.
+- **Backend**: Node.js, Express, WebSockets (ws).
+- **Core Engine**: yt-dlp (Python-based).
+- **Infrastructure**: Docker, Docker Compose, Nginx.
 
-* Node.js
-* Express.js
-* `yt-dlp` via `child_process.spawn()`
-* CORS and body parsing
+---
 
-##  Project Structure
+## 🚀 Quick Start (Production with Docker)
 
-```
-UniDownload/
-├── client/              # React frontend
-│   ├── public/
-│   └── src/
-│       ├── components/
-│       ├── pages/
-│       └── App.js
-├── server/              # Node.js backend
-│   ├── server.js
-│   └── yt-dlp.exe
-└── README.md
-```
+The easiest way to run UniDownload in a production-like environment is using Docker Compose.
 
-## 🖥️ How to Run Locally
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd unidownload
+   ```
 
-### 1. Clone the Repository
+2. **Start the containers**
+   ```bash
+   docker-compose up --build -d
+   ```
 
-```bash
-git clone https://github.com/khalil-deve/UniDownload.git
-cd UniDownload
-```
+3. **Access the app**
+   Open your browser and go to: `http://localhost`
 
-### 2. Backend Setup
+---
 
+## 💻 Local Development
+
+If you want to run the application locally without Docker:
+
+### 1. Prerequisite
+- Node.js 20+
+- Python 3.9+ 
+- FFmpeg installed in your system (required for merging high-quality video/audio).
+
+### 2. Setup Server
 ```bash
 cd server
 npm install
-node server.js
+# Ensure yt-dlp.py is present or yt-dlp is installed via pip
+npm run dev
 ```
 
-Make sure `yt-dlp` is installed and available in your system PATH.
-
-### 3. Frontend Setup
-
+### 3. Setup Client
 ```bash
 cd client
 npm install
 npm run dev
 ```
 
-The frontend will typically run on `http://localhost:3000` and backend on `http://localhost:5000`.
+The client will be available at `http://localhost:5173`.
 
+---
 
-##  Contributing
+## 📦 Project Structure
 
-Contributions are welcome! Feel free to open issues or submit pull requests to improve the tool.
+```text
+├── client/              # React frontend
+│   ├── src/             # Source code (Components, Pages)
+│   ├── public/          # Static assets (Home-page.png)
+│   ├── Dockerfile       # Multi-stage production build
+│   └── nginx.conf       # Nginx routing & proxy config
+├── server/              # Node.js backend
+│   ├── temp/            # Temporary download storage
+│   ├── Dockerfile       # Node.js + Python + FFmpeg environment
+│   └── server.js        # Express & WebSocket logic
+└── docker-compose.yml   # Full stack orchestration
+```
 
+---
+
+## ⚖️ Legal & Privacy
+
+UniDownload is for personal, lawful use only. Users are responsible for complying with the copyright laws and terms of service of the platforms they download from.
+
+- [Privacy Policy](http://localhost/privacy)
+- [Terms of Service](http://localhost/terms)
+- [Cookie Policy](http://localhost/cookies)
+
+---
+
+## 👨‍💻 Author
+
+**Muhammad Khalil** - [GitHub](https://github.com/Khalil-deve)
+
+---
+
+License: ISC

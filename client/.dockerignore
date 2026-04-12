@@ -1,0 +1,19 @@
+# Dev build artifacts — heavy, not needed in image
+node_modules
+dist
+
+# Environment files — secrets stay off Docker image
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Git
+.git
+.gitignore
+
+# Editor
+.vscode
+*.swp

@@ -1,23 +1,54 @@
-# Use Node.js with Python pre-installed
-FROM node:18-bullseye
+# ─────────────────────────────────────────────────────────────
+#  Backend (Node.js + Python + yt-dlp)
+#  Base: node:20-slim  (smaller than full debian, has apt)
+# ─────────────────────────────────────────────────────────────
+FROM node:20-slim
 
-# Install dependencies: Python, pip, ffmpeg
+# Install system dependencies:
+#   python3 + pip  → runs yt-dlp
+#   ffmpeg         → merges video+audio streams (required for 1080p+)
+#   ca-certificates → fixes SSL cert errors
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip ffmpeg && \
-    apt-get clean
+    apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        python3-venv \
+        ffmpeg \
+        ca-certificates && \
+    # Install yt-dlp and certifi via pip
+    pip3 install --break-system-packages --no-cache-dir yt-dlp certifi && \
+    # Clean up apt cache to keep image small
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Create app directory
+# Set working directory
 WORKDIR /app
 
-# Install backend dependencies
+# Copy package files first (Docker layer caching — only re-runs
+# npm install if package.json actually changes)
 COPY package*.json ./
-RUN npm install
 
-# Copy app files (including yt-dlp.py)
+# Install ONLY production dependencies (skip devDependencies)
+RUN npm ci --omit=dev
+
+# Copy the rest of the server code
+# (node_modules is excluded via .dockerignore)
 COPY . .
 
-# App listens on port 5000
+# Create temp folder for downloaded videos
+RUN mkdir -p temp
+
+# ── Security: run as non-root user ──────────────────────────
+# node:20-slim already has a 'node' user built in
+RUN chown -R node:node /app
+USER node
+
+# Expose the API port
 EXPOSE 5000
 
-# Run the backend
+# Health check — Docker will mark container unhealthy if it fails
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:5000', r => process.exit(r.statusCode === 404 ? 0 : 0)).on('error', () => process.exit(1))"
+
+# Start the server
 CMD ["node", "server.js"]

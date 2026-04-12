@@ -1,70 +1,96 @@
-import { FaGithub, FaTwitter, FaEnvelope, FaShieldAlt } from 'react-icons/fa';
-import './Footer.css';
+import { FaGithub, FaTwitter, FaEnvelope, FaShieldAlt } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
+  const year = new Date().getFullYear();
 
   return (
-    <footer className="footer">
-      <div className="footer-container">
-        <div className="footer-grid">
-          {/* Company Info */}
-          <div className="footer-section">
-            <h3 className="footer-heading">VideoDownloader Pro</h3>
-            <p className="footer-text">
+    <footer className="bg-slate-900 text-white pt-12 pb-6">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+          {/* Brand */}
+          <div>
+            <h3 className="text-indigo-400 font-semibold text-lg mb-4 pb-2 border-b border-indigo-400/20">
+              UniDownload
+            </h3>
+            <p className="text-slate-400 text-sm leading-relaxed mb-4">
               The fastest way to download videos from popular platforms without watermarks.
             </p>
-            <div className="footer-social">
-              <a href="https://github.com" aria-label="GitHub">
-                <FaGithub className="social-icon" />
-              </a>
-              <a href="https://twitter.com" aria-label="Twitter">
-                <FaTwitter className="social-icon" />
-              </a>
-              <a href="mailto:support@videodownloader.com" aria-label="Email">
-                <FaEnvelope className="social-icon" />
-              </a>
+            <div className="flex gap-3">
+              {[
+                { href: "https://github.com", icon: <FaGithub />, label: "GitHub" },
+                { href: "https://twitter.com", icon: <FaTwitter />, label: "Twitter" },
+                { href: "mailto:support@unidownload.com", icon: <FaEnvelope />, label: "Email" },
+              ].map(({ href, icon, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:text-indigo-400 hover:bg-slate-700 transition-all"
+                >
+                  {icon}
+                </a>
+              ))}
             </div>
           </div>
 
           {/* Quick Links */}
-          <div className="footer-section">
-            <h3 className="footer-heading">Quick Links</h3>
-            <ul className="footer-links">
-              <li><a href="/">Home</a></li>
-              <li><a href="#features">Features</a></li>
-              <li><a href="#how-it-works">How It Works</a></li>
-              <li><a href="#about">About</a></li>
+          <div>
+            <h3 className="text-indigo-400 font-semibold text-lg mb-4 pb-2 border-b border-indigo-400/20">
+              Quick Links
+            </h3>
+            <ul className="space-y-2">
+              {[["Home", "/"], ["Features", "/#features"], ["How It Works", "/#how-it-works"], ["About", "/#about"]].map(([label, href]) => (
+                <li key={label}>
+                  {href.startsWith("/") && !href.includes("#") ? (
+                    <Link to={href} className="text-slate-400 text-sm hover:text-indigo-400 transition-colors">
+                      {label}
+                    </Link>
+                  ) : (
+                    <a href={href} className="text-slate-400 text-sm hover:text-indigo-400 transition-colors">
+                      {label}
+                    </a>
+                  )}
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Legal */}
-          <div className="footer-section">
-            <h3 className="footer-heading">Legal</h3>
-            <ul className="footer-links">
-              <li><a href="/privacy">Privacy Policy</a></li>
-              <li><a href="/terms">Terms of Service</a></li>
-              <li><a href="/cookies">Cookie Policy</a></li>
-              <li><a href="/dmca">DMCA</a></li>
+          <div>
+            <h3 className="text-indigo-400 font-semibold text-lg mb-4 pb-2 border-b border-indigo-400/20">
+              Legal
+            </h3>
+            <ul className="space-y-2">
+              {[["Privacy Policy", "/privacy"], ["Terms of Service", "/terms"], ["Cookie Policy", "/cookies"]].map(([label, href]) => (
+                <li key={label}>
+                  <Link to={href} className="text-slate-400 text-sm hover:text-indigo-400 transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Security Badge */}
-          <div className="footer-section">
-            <div className="security-badge">
-              <FaShieldAlt className="security-icon" />
-              <span>Secure 256-bit SSL Encryption</span>
+          {/* Security */}
+          <div>
+            <h3 className="text-indigo-400 font-semibold text-lg mb-4 pb-2 border-b border-indigo-400/20">
+              Security
+            </h3>
+            <div className="flex items-center gap-2 text-emerald-400 mb-3">
+              <FaShieldAlt />
+              <span className="text-sm font-medium">256-bit SSL Encryption</span>
             </div>
-            <p className="footer-disclaimer">
+            <p className="text-slate-500 text-xs leading-relaxed">
               This tool is for personal use only. We do not store or host any videos.
             </p>
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="footer-bottom">
-          <p className="copyright">
-            &copy; {currentYear} VideoDownloader Pro. All rights reserved.
+        {/* Bottom bar */}
+        <div className="border-t border-slate-800 pt-5 text-center">
+          <p className="text-slate-500 text-sm">
+            &copy; {year} VideoDownloader Pro. All rights reserved.
           </p>
         </div>
       </div>

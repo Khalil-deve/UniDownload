@@ -1,1 +1,17 @@
+@import "tailwindcss";
 
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Spinner shimmer for loading button */
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}

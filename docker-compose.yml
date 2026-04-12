@@ -1,0 +1,50 @@
+services:
+
+  # ── Backend: Node.js + Python + yt-dlp ──────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: unidownload_server
+    restart: unless-stopped
+
+    # Only expose 5000 internally (nginx proxies to it)
+    # Remove "ports" here in production — client nginx handles it
+    ports:
+      - "5000:5000"   # keep this for direct testing, remove in prod
+
+    environment:
+      - NODE_ENV=production
+
+    # Mount temp dir so downloaded files persist across restarts
+    volumes:
+      - ./server/temp:/app/temp
+
+    # Health check — compose will wait for this before starting client
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000', ()=>{}).on('error', ()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── Frontend: React (Vite build) served by Nginx ────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: unidownload_client
+    restart: unless-stopped
+
+    ports:
+      - "80:80"     # Access the app at http://localhost
+
+    # Don't start until the server is healthy
+    depends_on:
+      server:
+        condition: service_healthy
+
+# ── Shared network (containers talk by service name) ──────────
+networks:
+  default:
+    name: unidownload_network
