@@ -28,8 +28,8 @@ WORKDIR /app
 # npm install if package.json actually changes)
 COPY package*.json ./
 
-# Install ONLY production dependencies (skip devDependencies)
-RUN npm ci --omit=dev
+# Install ONLY production dependencies
+RUN npm install --production
 
 # Copy the rest of the server code
 # (node_modules is excluded via .dockerignore)
@@ -47,8 +47,8 @@ USER node
 EXPOSE 5000
 
 # Health check — Docker will mark container unhealthy if it fails
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:5000', r => process.exit(r.statusCode === 404 ? 0 : 0)).on('error', () => process.exit(1))"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:5000', r => process.exit(r.statusCode ? 0 : 1)).on('error', () => process.exit(1))"
 
 # Start the server
 CMD ["node", "server.js"]

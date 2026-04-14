@@ -24,12 +24,16 @@ const logProjectStructure = (dir, prefix = "", depth = 0) => {
     
     const isLast = index === files.length - 1;
     const filePath = path.join(dir, file);
-    const stats = fs.statSync(filePath);
     
-    console.log(`${prefix}${isLast ? "└── " : "├── "}${file}`);
-    
-    if (stats.isDirectory()) {
-      logProjectStructure(filePath, `${prefix}${isLast ? "    " : "│   "}`, depth + 1);
+    try {
+      const stats = fs.statSync(filePath);
+      console.log(`${prefix}${isLast ? "└── " : "├── "}${file}`);
+      
+      if (stats.isDirectory()) {
+        logProjectStructure(filePath, `${prefix}${isLast ? "    " : "│   "}`, depth + 1);
+      }
+    } catch (e) {
+      // Skip files that the system can't access
     }
   });
 };
@@ -120,23 +124,65 @@ app.post("/download", async (req, res) => {
       fs.mkdirSync(outputDir);
     }
 
+    // [New] Fast-fail if the directory isn't writable
+    try {
+      fs.accessSync(outputDir, fs.constants.W_OK);
+    } catch (err) {
+      console.error(`[Critical] Temp directory not writable: ${outputDir}`);
+      return res.status(500).json({ 
+        error: "Server cannot write to storage. Please run: sudo chown -R ubuntu:ubuntu server/temp" 
+      });
+    }
+
     let formatArgs = [];
     if (quality === "1080")
-      formatArgs = ["-f", "bestvideo[height<=1080]+bestaudio/best"];
+      formatArgs = ["-f", "bestvideo[height<=1080]+bestaudio/best[ext=m4a]/best"];
     else if (quality === "720")
-      formatArgs = ["-f", "bestvideo[height<=720]+bestaudio/best"];
+      formatArgs = ["-f", "bestvideo[height<=720]+bestaudio/best[ext=m4a]/best"];
     else if (quality === "480")
-      formatArgs = ["-f", "bestvideo[height<=480]+bestaudio/best"];
-    else if (quality === "audio") formatArgs = ["-f", "bestaudio"];
+      formatArgs = ["-f", "bestvideo[height<=480]+bestaudio/best[ext=m4a]/best"];
+    else if (quality === "audio") 
+      formatArgs = ["-f", "bestaudio/best"];
 
     const outputTemplate = path.join(outputDir, `video-${timestamp}.%(ext)s`);
 
     // Determine the yt-dlp command to use
-    // In Docker, it's installed globally as 'yt-dlp'
-    // Locally, we might use the 'yt-dlp.py' script
     const localYtDlp = path.join(__dirname, "yt-dlp.py");
+    const cookiesPath = path.join(__dirname, "cookies.txt");
+    
     let cmd = "yt-dlp";
-    let args = ["--no-playlist", "--no-check-certificate", ...formatArgs, "-o", outputTemplate, url];
+    let args = [
+      "--no-playlist", 
+      "--no-check-certificate", 
+      "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+      "--referer", "https://www.youtube.com/",
+      ...formatArgs, 
+      "-o", outputTemplate, 
+      "--cache-dir", path.join(__dirname, ".cache"),
+      url
+    ];
+
+    // Add cookies if the file exists
+    if (fs.existsSync(cookiesPath)) {
+      console.log("[System] Found cookies.txt, attaching to request...");
+      args.splice(2, 0, "--cookies", cookiesPath);
+    }
+
+    // Add proxy if the file exists (proxy.txt should contain the proxy URL)
+    const proxyPath = path.join(__dirname, "proxy.txt");
+    if (fs.existsSync(proxyPath)) {
+      const proxyUrl = fs.readFileSync(proxyPath, "utf8").trim();
+      if (proxyUrl) {
+        console.log(`[System] Found proxy.txt, using proxy: ${proxyUrl}`);
+        args.splice(2, 0, "--proxy", proxyUrl);
+      }
+    }
+
+    // [New] Use Mobile/Android clients to bypass some Desktop-only n-challenges
+    args.push("--extractor-args", "youtube:player_client=android,web,mweb");
+
+    // [New] REQUIRED for newer yt-dlp versions: specify the JS runtime
+    args.push("--js-runtimes", "node");
 
     if (!fs.existsSync(localYtDlp)) {
       // If no local script, we MUST use global command
@@ -148,7 +194,9 @@ app.post("/download", async (req, res) => {
       args = [localYtDlp, ...args];
     }
 
-    const downloader = spawn(cmd, args);
+    // Explicitly pass environment to ensure 'node' is in PATH
+    const env = { ...process.env, PATH: process.env.PATH + ":/usr/bin:/usr/local/bin" };
+    const downloader = spawn(cmd, args, { env });
 
     downloader.stdout.on("data", (data) => {
       const output = data.toString();
@@ -218,6 +266,6 @@ server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log("=".repeat(40));
   console.log("\n Project Structure:");
-  logProjectStructure(path.join(__dirname, ".."));
+  logProjectStructure(__dirname);
   console.log("=".repeat(40) + "\n");
 });

@@ -47,4 +47,4 @@ services:
 # ── Shared network (containers talk by service name) ──────────
 networks:
   default:
-    name: unidownload_network
+    driver: bridge
