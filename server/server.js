@@ -178,8 +178,8 @@ app.post("/download", async (req, res) => {
       }
     }
 
-    // [New] Use Mobile/Android clients to bypass some Desktop-only n-challenges
-    args.push("--extractor-args", "youtube:player_client=android,web,mweb");
+    // [New] Use TV_EMBEDDED and Mobile/Android clients to bypass some Desktop-only n-challenges (from the article)
+    args.push("--extractor-args", "youtube:player_client=tv_embedded,android,web,mweb");
 
     // [New] REQUIRED for newer yt-dlp versions: specify the JS runtime
     args.push("--js-runtimes", "node");

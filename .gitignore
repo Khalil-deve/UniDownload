@@ -17,7 +17,8 @@ pids
 node_modules/
         
 # Environment variables
-!.env.example
+.env.example
+.env
 
 # Build outputs
 dist/
