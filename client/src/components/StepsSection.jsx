@@ -1,3 +1,4 @@
+import React from "react";
 import { FaLink, FaPaste, FaDownload } from "react-icons/fa";
 
 const steps = [

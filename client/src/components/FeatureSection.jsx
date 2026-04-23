@@ -1,3 +1,4 @@
+import React from "react";
 import { FaShieldAlt, FaBolt, FaStar, FaMobileAlt } from "react-icons/fa";
 
 const features = [

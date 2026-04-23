@@ -1,3 +1,4 @@
+import React from "react";
 import { FaLock, FaShieldAlt, FaAd, FaSyncAlt, FaQuestionCircle } from "react-icons/fa";
 
 const benefits = [
