@@ -46,3 +46,11 @@ pnpm-lock.yaml
 config.bat
 temp_auto_push.bat
 temp_interactive_push.bat
+
+# Sensitive server runtime files — never commit these
+server/cookies.txt
+cookies.txt
+server/proxy.txt
+proxy.txt
+server/.cache/
+.cache/

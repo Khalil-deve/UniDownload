@@ -162,10 +162,48 @@ app.post("/download", async (req, res) => {
       url
     ];
 
-    // Add cookies if the file exists
+    // Cookie strategy:
+    // Priority 1 - cookies.txt file (required for production/Docker)
+    // Priority 2 - read directly from installed browser (local dev only)
     if (fs.existsSync(cookiesPath)) {
       console.log("[System] Found cookies.txt, attaching to request...");
       args.splice(2, 0, "--cookies", cookiesPath);
+    } else {
+      // Try to pull cookies from an installed browser automatically
+      const browserOverride = process.env.BROWSER_FOR_COOKIES; // e.g. "firefox" or "edge"
+      const browsersToTry = browserOverride
+        ? [browserOverride]
+        : ["chrome", "edge", "firefox", "chromium", "brave"];
+
+      let browserFound = false;
+      for (const browser of browsersToTry) {
+        try {
+          // Quick test: can yt-dlp see this browser's cookie store?
+          const { execFileSync } = require("child_process");
+          let testCmd, testCmdArgs;
+          if (fs.existsSync(localYtDlp)) {
+            // Local script present — invoke via python interpreter
+            testCmd = process.platform === "win32" ? "python" : "python3";
+            testCmdArgs = [localYtDlp];
+          } else {
+            // No local script — use global yt-dlp binary (installed via pip)
+            testCmd = "yt-dlp";
+            testCmdArgs = [];
+          }
+          execFileSync(testCmd, [...testCmdArgs, "--cookies-from-browser", browser, "--simulate", "--quiet", "https://www.youtube.com"], { timeout: 8000, stdio: "pipe" });
+          console.log(`[System] Using cookies from browser: ${browser}`);
+          args.splice(2, 0, "--cookies-from-browser", browser);
+          browserFound = true;
+          break;
+        } catch (_) {
+          // Browser not found or locked — try next
+        }
+      }
+
+      if (!browserFound) {
+        console.warn("[System] No cookies source found. YouTube may block the request.");
+        console.warn("[System] Fix: close Chrome and retry, OR place a cookies.txt in the server/ folder.");
+      }
     }
 
     // Add proxy if the file exists (proxy.txt should contain the proxy URL)
@@ -178,11 +216,21 @@ app.post("/download", async (req, res) => {
       }
     }
 
-    // [New] Use TV_EMBEDDED and Mobile/Android clients to bypass some Desktop-only n-challenges (from the article)
-    args.push("--extractor-args", "youtube:player_client=tv_embedded,android,web,mweb");
+    // Player client selection must match cookie availability:
+    // - web/mweb: support cookie authentication, yt-dlp 2026+ handles signatures
+    // - ios/android: return pre-signed URLs but do NOT accept cookies (yt-dlp 2026.x)
+    const hasCookies = args.includes("--cookies") || args.includes("--cookies-from-browser");
+    if (hasCookies) {
+      console.log("[System] Cookies detected — using web/mweb player clients");
+      // Add remote-components flag so yt-dlp can fetch latest JS challenge solvers from GitHub
+      args.push("--extractor-args", "youtube:player_client=web,mweb");
+      args.push("--remote-components", "ejs:github");
+      args.push("--js-runtimes", "node");
+    } else {
+      console.log("[System] No cookies — using ios/android clients (pre-signed URLs)");
+      args.push("--extractor-args", "youtube:player_client=ios,android");
+    }
 
-    // [New] REQUIRED for newer yt-dlp versions: specify the JS runtime
-    args.push("--js-runtimes", "node");
 
     if (!fs.existsSync(localYtDlp)) {
       // If no local script, we MUST use global command
